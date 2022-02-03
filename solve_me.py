@@ -77,27 +77,82 @@ $ python tasks.py runserver # Starts the tasks management server"""
         )
 
     def add(self, args):
-        pass  # Use your existing implementation
+        try:
+            self.read_current()
+            if int(args[0]) in self.current_items.keys():
+                call = []
+                old_item = self.current_items[int(args[0])]
+                new_priority = int(args[0]) + 1
+                call.append(new_priority)
+                call.append(old_item)
+                self.add(call)
+                self.current_items[int(args[0])] = args[1]
+            else:
+                self.current_items[int(args[0])] = args[1]
+            self.write_current()
+            print(f"Added task: \"{args[1]}\" with priority {args[0]}")
+        except Exception:
+            print("here")
 
     def done(self, args):
-        pass  # Use your existing implementation
+        try:
+            self.read_current()
+            self.read_completed()
+            item = self.current_items[int(args[0])]
+            self.completed_items.append(item)
+            del self.current_items[int(args[0])]
+            self.write_current()
+            self.write_completed()
+            print("Marked item as done.")
+        except Exception:
+            print(f"Error: no incomplete item with priority {args[0]} exists.")
 
     def delete(self, args):
-        pass  # Use your existing implementation
+        try:
+            self.read_current()
+            del self.current_items[int(args[0])]
+            self.write_current()
+            print(f"Deleted item with priority {args[0]}")
+        except Exception:
+            print(f"Error: item with priority {args[0]} does not exist. Nothing deleted.")
 
     def ls(self):
-        pass  # Use your existing implementation
+        self.read_current()
+        i = 1
+        for priority, task in self.current_items.items():
+            print(f"{i}. {task} [{priority}]")
+            i = i + 1
 
     def report(self):
-        pass  # Use your existing implementation
+        self.read_current()
+        self.read_completed()
+        print(f"Pending : {len(self.current_items)}")
+        i = 1
+        for priority, task in self.current_items.items():
+            print(f"{i}. {task} [{priority}]")
+            i = i + 1
+        print(f"\nCompleted : {len(self.completed_items)}")
+        i = 1
+        for item in self.completed_items:
+            print(f"{i}. {item}")
+            i = i + 1
 
     def render_pending_tasks(self):
-        # Complete this method to return all incomplete tasks as HTML
-        return "<h1> Show Incomplete Tasks Here </h1>"
+        self.read_current()
+        list_items = []
+        list_items.append("<tr> <th>Priotity</th> <th>Task</th> </tr>")
+        for priority, task in self.current_items.items():
+            list_items.append(f"<tr> <td> {priority} </td> <td> {task} </td> </tr>")
+        content = "<table>" + "".join(list_items) + "</table>"
+        return "<h1> Show Incomplete Tasks Here </h1>" + content
 
     def render_completed_tasks(self):
-        # Complete this method to return all completed tasks as HTML
-        return "<h1> Show Completed Tasks Here </h1>"
+        self.read_completed()
+        list_items = []
+        for task in self.completed_items:
+            list_items.append(f"<li> {task} </li>")
+        content = "<ul>" + "".join(list_items) + "</ul>"
+        return "<h1> Show Completed Tasks Here </h1>" + content
 
 
 class TasksServer(TasksCommand, BaseHTTPRequestHandler):
